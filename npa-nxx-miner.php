@@ -11,17 +11,33 @@
 
 ini_set("max_execution_time", 3600);
 
+$sources = array(
+	'telcodata'	=> array(
+		'url'		=> 'http://www.telcodata.us/query/queryareacodexml.html?npa=',
+		'nodeName'	=> 'exchangedata'
+	),
+	'localcallingguide'	=> array(
+		'url'		=> 'http://www.localcallingguide.com/xmlprefix.php?npa=',
+		'nodeName'	=> 'prefixdata'
+	),
+);
+
+// select data source
+$src		= 'localcallingguide';
+$url		= $sources[$src]['url'];
+$nodeName	= $sources[$src]['nodeName'];
+
 $min_npa = 200;
 $max_npa = 989;
 $headers = array();
 
-$fp = fopen('npa-nxx.csv', 'w');
+$fp = fopen("npa-nxx-{$src}.csv", 'w');
 // npa enumeration, avoiding N9X (most, if not all of these are unused expansion codes)
 for ($npa = $min_npa; $npa <= $max_npa; $npa += substr($npa,1,2) == 89 ? 11 : 1) {
-	$xml = simplexml_load_string(file_get_contents("http://www.telcodata.us/query/queryareacodexml.html?npa={$npa}"));
+	$xml = simplexml_load_string(file_get_contents($url . $npa));
 
-	if (empty($headers) && $xml->exchangedata) {
-		foreach ($xml->exchangedata as $rec) {
+	if (empty($headers) && $xml->$nodeName) {
+		foreach ($xml->$nodeName as $rec) {
 			foreach ($rec->children() as $col) {
 				$headers[] = $col->getName();
 			}
@@ -30,7 +46,7 @@ for ($npa = $min_npa; $npa <= $max_npa; $npa += substr($npa,1,2) == 89 ? 11 : 1)
 		}
 	}
 
-	foreach ($xml->exchangedata as $rec) {
+	foreach ($xml->$nodeName as $rec) {
 		fputcsv($fp, (array)$rec);
 	}
 }
