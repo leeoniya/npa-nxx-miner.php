@@ -29,26 +29,14 @@ $nodeName	= $sources[$src]['nodeName'];
 
 $min_npa = 200;
 $max_npa = 989;
-$headers = array();
 
 $fp = fopen("npa-nxx-{$src}.csv", 'w');
 // npa enumeration, avoiding N9X (most, if not all of these are unused expansion codes)
 for ($npa = $min_npa; $npa <= $max_npa; $npa += substr($npa,1,2) == 89 ? 11 : 1) {
 	$xml = simplexml_load_string(file_get_contents($url . $npa));
-
-	if (empty($headers) && $xml->$nodeName) {
-		foreach ($xml->$nodeName as $rec) {
-			foreach ($rec->children() as $col) {
-				$headers[] = $col->getName();
-			}
-			fputcsv($fp, $headers);
-			break;
-		}
-	}
-
-	foreach ($xml->$nodeName as $rec) {
-		fputcsv($fp, (array)$rec);
-	}
+	if (!($recs = &$xml->$nodeName)) continue;
+	if (!$headers) $headers = fputcsv($fp, array_keys((array)$recs[0]));
+	foreach ($recs as $rec) fputcsv($fp, (array)$rec);
 }
 fclose($fp);
 ?>
