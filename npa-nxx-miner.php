@@ -30,7 +30,9 @@ $nodeName	= $sources[$src]['nodeName'];
 $min_npa = 200;
 $max_npa = 989;
 
-$fp = fopen("npa-nxx-{$src}.csv", 'w');
+$date = date('Y-m-d');
+
+$fp = fopen("npa-nxx_{$date}_{$src}.csv", 'w');
 // npa enumeration, avoiding N9X (most, if not all of these are unused expansion codes)
 for ($npa = $min_npa; $npa <= $max_npa; $npa += substr($npa,1,2) == 89 ? 11 : 1) {
 	$xml = simplexml_load_string(file_get_contents($url . $npa));
